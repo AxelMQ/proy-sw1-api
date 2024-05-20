@@ -15,13 +15,14 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->string('apellido');
-            $table->integer('telefono');
+            $table->integer('telefono')->unique();
             $table->string('sexo');
+            $table->string('email')->unique();
             $table->date('fecha_nac');
             $table->string('ruta_foto')->nullable();
             $table->timestamps();
             $table->unsignedBigInteger('user_id');
-            $table->foreign('user_id')->references('id')->on('users');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
