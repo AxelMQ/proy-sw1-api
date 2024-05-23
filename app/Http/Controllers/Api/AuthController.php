@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\api;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -44,10 +44,10 @@ class AuthController extends Controller
                 ], Response::HTTP_UNAUTHORIZED);
             }
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (\Exception $e)  {
             return response()->json([
                 "message" => "Error al verificar la contraseña.",
-                "error" => $e->errors(),
+                "error" => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
