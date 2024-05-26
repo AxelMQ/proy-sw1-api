@@ -16,3 +16,4 @@ Route::delete('user-data/{id}', [UserDataController::class, 'delete']);
 Route::put('user-data/{id}', [UserDataController::class, 'update']);
 
 Route::post('login', [AuthController::class, 'login']);
+Route::middleware('auth:sanctum')->get('user', [AuthController::class, 'getUser']);

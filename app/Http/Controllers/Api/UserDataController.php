@@ -34,10 +34,13 @@ class UserDataController extends Controller
                 'apellido' => 'required',
                 'fecha_nac' => 'required',
                 'sexo' => 'required',
-                'email' => 'required|email',
-                'telefono' => 'required',
+                'email' => 'required|unique:user_data',
+                'telefono' => 'required|unique:user_data',
                 'ruta_foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 'user_id' => 'required|exists:users,id',
+            ],[
+                'email.unique' => 'El correo electronico ya esta registrado con otro usuario.',
+                'telefono.unique' => 'El telefono ya esta registrado con otro usuario.'
             ]);
 
             $image = $request->file('ruta_foto');
@@ -65,10 +68,10 @@ class UserDataController extends Controller
                 "userData" => $userData
             ], Response::HTTP_CREATED); //201
             
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 "message" => "No se logro registrar los Datos del Usuario.",
-                "error" => $e->getMessage()
+                "errors" => $e->errors()
             ], Response::HTTP_BAD_REQUEST); //400
         }
     }

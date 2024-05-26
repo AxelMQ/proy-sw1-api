@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\Response;
@@ -31,7 +32,7 @@ class AuthController extends Controller
 
             if (Hash::check($password, $user->password)) {
                 $token = $user->createToken('token')->plainTextToken;
-                $cookie = cookie('cookie_token', $token, 60*24);
+                $cookie = cookie('cookie_token', $token, 60 * 24);
 
                 return response()->json([
                     "message" => "Inicio de Sesion exitoso.",
@@ -43,10 +44,36 @@ class AuthController extends Controller
                     "message" => "Contraseña incorrecta",
                 ], Response::HTTP_UNAUTHORIZED);
             }
-
-        } catch (\Exception $e)  {
+        } catch (\Exception $e) {
             return response()->json([
                 "message" => "Error al verificar la contraseña.",
+                "error" => $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function getUser(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $userData = $user->userData; // Asumiendo que tienes una relación definida en el modelo User
+
+            if (!$user) {
+                return response()->json([
+                    "message" => "Usuario no autenticado."
+                ], Response::HTTP_UNAUTHORIZED);
+            }
+
+            return response()->json([
+                "user" => [
+                    "id" => $user->id,
+                    "username" => $user->username,
+                ],
+                "userData" => $userData
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json([
+                "message" => "Error al obtener los datos del usuario.",
                 "error" => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
