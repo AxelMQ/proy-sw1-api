@@ -10,8 +10,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 class UserDataController extends Controller
 {
-    public function allData (){
-        try{
+    public function allData()
+    {
+        try {
 
             $usersData = UserData::all();
             return response()->json([
@@ -38,7 +39,7 @@ class UserDataController extends Controller
                 'telefono' => 'required|unique:user_data',
                 'ruta_foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 'user_id' => 'required|exists:users,id',
-            ],[
+            ], [
                 'email.unique' => 'El correo electronico ya esta registrado con otro usuario.',
                 'telefono.unique' => 'El telefono ya esta registrado con otro usuario.'
             ]);
@@ -67,7 +68,7 @@ class UserDataController extends Controller
                 "message" => "Datos del Usuario registrados exitosamente.",
                 "userData" => $userData
             ], Response::HTTP_CREATED); //201
-            
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 "message" => "No se logro registrar los Datos del Usuario.",
@@ -76,7 +77,8 @@ class UserDataController extends Controller
         }
     }
 
-    public function delete($id){
+    public function delete($id)
+    {
         try {
             $dataUser = UserData::find($id);
 
@@ -103,7 +105,8 @@ class UserDataController extends Controller
         }
     }
 
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         try {
             $userData = UserData::findOrFail($id);
 
@@ -112,10 +115,12 @@ class UserDataController extends Controller
                 'apellido' => 'required',
                 'fecha_nac' => 'required',
                 'sexo' => 'required',
-                'email' => 'required|email',
-                'telefono' => 'required',
-                'ruta_foto' => 'nullable|image|mimes:jpeg,png,jgp,gif,svg|max:2048',
-                // 'user_id' => 'required|exists:users,id',
+                'email' => 'required|email|unique:user_data,email,' . $userData->id,
+                'telefono' => 'required|unique:user_data,telefono,' . $userData->id,
+                // 'ruta_foto' => 'nullable|image|mimes:jpeg,png,jgp,gif,svg|max:2048',
+            ], [
+                'email.unique' => 'El correo electronico ya esta en uso.',
+                'telefono.unique' => 'El Telefono ya esta en uso.'
             ]);
 
             $userData->nombre = $request->nombre;
@@ -125,17 +130,17 @@ class UserDataController extends Controller
             $userData->email = $request->email;
             $userData->telefono = $request->telefono;
 
-            if ($request->hasFile('ruta_foto')) {
-                if ($userData->ruta_foto) {
-                    Storage::disk('public')->delete($userData->ruta_foto);
-                }
+            // if ($request->hasFile('ruta_foto')) {
+            //     if ($userData->ruta_foto) {
+            //         Storage::disk('public')->delete($userData->ruta_foto);
+            //     }
 
-                $image = $request->file('ruta_foto');
-                $imageName = 'img_' . uniqid() . '.' . $image->getClientOriginalExtension();
-                $imagePath = $image->storeAs('img_user', $imageName, 'public');
-                $userData->ruta_foto = $imagePath;
-            }
-            
+            //     $image = $request->file('ruta_foto');
+            //     $imageName = 'img_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            //     $imagePath = $image->storeAs('img_user', $imageName, 'public');
+            //     $userData->ruta_foto = $imagePath;
+            // }
+
             $userData->save();
 
             return response()->json([
@@ -143,9 +148,20 @@ class UserDataController extends Controller
                 "data" => $userData
             ], Response::HTTP_OK); //200
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                "message" => "Errores de validación.",
+                "errors" => $e->errors()
+            ], Response::HTTP_UNPROCESSABLE_ENTITY); //422
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                "message" => "Usuario no encontrado.",
+                "error" => $e->getMessage()
+            ], Response::HTTP_NOT_FOUND); //404
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "No se logro actualizar los datos del Usuario.",
+                "message" => "No se logró actualizar los datos del Usuario.",
                 "error" => $e->getMessage()
             ], Response::HTTP_BAD_REQUEST); //400
         }

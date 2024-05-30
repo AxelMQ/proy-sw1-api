@@ -56,7 +56,7 @@ class AuthController extends Controller
     {
         try {
             $user = $request->user();
-            $userData = $user->userData; // Asumiendo que tienes una relación definida en el modelo User
+            $userData = $user->userData;
 
             if (!$user) {
                 return response()->json([
