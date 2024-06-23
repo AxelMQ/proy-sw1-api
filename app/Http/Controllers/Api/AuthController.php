@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Friendship;
 use App\Models\User;
 use App\Models\UserData;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -55,21 +57,31 @@ class AuthController extends Controller
     public function getUser(Request $request)
     {
         try {
-            $user = $request->user();
-            $userData = $user->userData;
+            $userId = Auth::id();
 
-            if (!$user) {
+            if (!$userId) {
                 return response()->json([
-                    "message" => "Usuario no autenticado."
-                ], Response::HTTP_UNAUTHORIZED);
+                    "message" => "Usuario no autenticado"
+                ], Response::HTTP_UNAUTHORIZED); //401
             }
+
+            $user = User::with('userData')->findOrFail($userId);
+
+            // Contar los amigos aceptados
+            $friendCount = Friendship::where(function ($query) use ($userId) {
+                $query->where('user_id', $userId)
+                    ->orWhere('friend_id', $userId);
+            })
+                ->where('estado', 'aceptado')
+                ->count();
 
             return response()->json([
                 "user" => [
                     "id" => $user->id,
                     "username" => $user->username,
+                    "friends_count" =>   $user->friends_count = $user->friends()->count(), // Incluir el conteo de amigos
                 ],
-                "userData" => $userData
+                "userData" => $user->userData
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             return response()->json([
